@@ -297,3 +297,4 @@ def process_riddle_answer(answer: str):
         s.latest_clue = f"Hint: {riddle['hint']}"
         # Display an incorrect-answer notification
         st.toast("Incorrect — the seal holds.", icon="❌")
+        
