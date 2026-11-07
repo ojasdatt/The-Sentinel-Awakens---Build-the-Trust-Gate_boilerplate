@@ -1,9 +1,11 @@
 import random
 import streamlit as st
+import config
 
 from constants import (
     MAX_TRUST, BANISH_THRESHOLD, STREAK_BONUS_AT,
     HELPFUL_HINTS, RUDE_HINTS,
+    MOOD_STYLES, MOOD_FEEL,
     SENTINEL_FALLBACKS, REPEAT_REPLIES,
 )
 
@@ -297,4 +299,38 @@ def process_riddle_answer(answer: str):
         s.latest_clue = f"Hint: {riddle['hint']}"
         # Display an incorrect-answer notification
         st.toast("Incorrect — the seal holds.", icon="❌")
-        
+
+
+# Saftey net for sentinel,(If no API key)
+#Create messages for it to say(random), if rude word detected
+def fallback_sentinal(player_name: str, message: str, mood: str) -> str:
+
+    if any(w in message.lower() for w in RUDE_HINTS):
+        return random.choice([
+            "Watch yourself. I've turned away far greater than you for less.",
+            "That kind of door doesnt open doors, it closes them.",
+            "Careful. The vault remmembers every word spoken.",
+        ])
+    #Changes mood to suspicious
+    return random.choice(SENTINEL_FALLBACKS.get(mood,SENTINEL_FALLBACKS["Suspicious"]))
+
+
+#If user asks something to sentinal
+def ask_sentinal(player_name: str, message: str, trust:int, mood:str)->str:
+
+    if not config.GROQ_API_KEY:
+        return fallback_sentinal(player_name,message,mood)
+
+    #How Ai feels, and will respond accordingly
+    #Tells Ai how to respond/act
+    system_prompt = (
+        f"You are the Sentinel - an ancient immortal gatekeeper.\n"
+        f"{MOOD_STYLES.get(mood, MOOD_STYLES['Suspicious'])}\n"
+        "Use contractions, vary sentence length, react emotionaly.\n"
+        "Never break character.Never mention being an AI\n"
+        "Under 80 words. End with a question, warning, or hint\n"
+    )
+    #Tells Ai whats happening currently in the convo
+    #Tells ai how it's felling
+    #Connects with system_prompt
+    user_prompt = ()
